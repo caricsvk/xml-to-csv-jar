@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Path("/")
 public class BaseResource {
@@ -100,7 +101,7 @@ public class BaseResource {
 			}
 			Node item = childNodes.item(i);
 			if (item.getChildNodes().getLength() == 1 && item.getChildNodes().item(0).getChildNodes().getLength() == 0) {
-				if (getName(item).contains("typ:parameter")) {
+				if (getName(item).contains("typ:parameter") || "stk:intParameterName".equals(item.getNodeName())) {
 					skipNext = true;
 					keys.add(getName(item) + "." + item.getTextContent());
 				} else {
@@ -124,9 +125,17 @@ public class BaseResource {
 			if (item.getChildNodes().getLength() == 1 && item.getChildNodes().item(0).getChildNodes().getLength() == 0) {
 				if (getName(item).contains("typ:parameter")) {
 					skipNext = true;
-					map.put(getName(item) + "." + item.getTextContent(), item.getNextSibling().getTextContent());
+					addToMap(map, getName(item) + "." + item.getTextContent(), item.getNextSibling().getTextContent());
+				} if ("stk:intParameterName".equals(item.getNodeName())) {
+					skipNext = true;
+					NodeList parameterValues = item.getParentNode().getLastChild().getChildNodes();
+					List<String> values = new ArrayList<>();
+					for (int j = 0; j < parameterValues.getLength(); j ++) {
+						values.add(parameterValues.item(j).getTextContent());
+					}
+					addToMap(map, getName(item) + "." + item.getTextContent(), String.join(",", values));
 				} else {
-					map.put(getName(item), item.getTextContent());
+					addToMap(map, getName(item), item.getTextContent());
 				}
 			} else if (map == null) {
 				HashMap<String, String> childMap = new HashMap<>();
@@ -139,7 +148,16 @@ public class BaseResource {
 		return results;
 	}
 
+	private void addToMap(HashMap<String, String> map, String key, String value) {
+		if (map.containsKey(key)) {
+			map.put(key, map.get(key) + ", " + value);
+		} else {
+			map.put(key, value);
+		}
+	}
+
 	public String getName(Node item) {
 		return item.getParentNode() == null ? "" : getName(item.getParentNode()) + "." + item.getNodeName();
 	}
+
 }
