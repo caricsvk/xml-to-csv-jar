@@ -83,7 +83,7 @@ public class BaseResource {
 			System.out.println("BaseResource.uploadPdfFile creating csv took " + (System.currentTimeMillis() - checkpointTime) + "ms");
 			return Response.status(200)
 					.entity(output)
-					.header("Content-Disposition", "attachment; filename=xml-to-csv.csv")
+					.header("Content-Disposition", "attachment; filename=" + fileMetaData.getFileName() + ".csv")
 					.build();
 		} catch (Exception e) {
 			Logger.getAnonymousLogger().log(Level.SEVERE, "caught error: " + e.getMessage(), e);
